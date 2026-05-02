@@ -1,6 +1,5 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
   description: API specification
@@ -9,18 +8,14 @@ servers:
     description: Base API path
 tags:
   - name: health
-    description: Health operations
   - name: scripts
-    description: AI-generated video scripts
   - name: user
-    description: User profile and billing
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -33,8 +28,6 @@ paths:
     get:
       operationId: listScripts
       tags: [scripts]
-      summary: List user scripts
-      description: Returns paginated list of user's generated scripts
       security:
         - bearerAuth: []
       parameters:
@@ -43,7 +36,6 @@ paths:
           schema:
             type: string
             enum: [TikTok, Instagram, YouTube]
-          description: Filter by platform
         - name: limit
           in: query
           schema:
@@ -68,14 +60,10 @@ paths:
                       $ref: "#/components/schemas/Script"
                   total:
                     type: integer
-                required:
-                  - scripts
-                  - total
+                required: [scripts, total]
     post:
       operationId: generateScript
       tags: [scripts]
-      summary: Generate a new script with AI
-      description: Uses GPT-4o-mini to generate a structured viral video script
       security:
         - bearerAuth: []
       requestBody:
@@ -92,7 +80,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/Script"
         "402":
-          description: Free limit reached — upgrade required
+          description: Free limit reached
           content:
             application/json:
               schema:
@@ -102,8 +90,6 @@ paths:
     get:
       operationId: getScriptStats
       tags: [scripts]
-      summary: Get script generation stats
-      description: Returns totals and platform breakdown for the current user
       security:
         - bearerAuth: []
       responses:
@@ -118,7 +104,6 @@ paths:
     get:
       operationId: getScript
       tags: [scripts]
-      summary: Get a specific script
       security:
         - bearerAuth: []
       parameters:
@@ -139,7 +124,6 @@ paths:
     delete:
       operationId: deleteScript
       tags: [scripts]
-      summary: Delete a script
       security:
         - bearerAuth: []
       parameters:
@@ -156,7 +140,6 @@ paths:
     get:
       operationId: getUserProfile
       tags: [user]
-      summary: Get current user profile
       security:
         - bearerAuth: []
       responses:
@@ -171,7 +154,6 @@ paths:
     post:
       operationId: createCheckout
       tags: [user]
-      summary: Create a Stripe checkout session for Pro upgrade
       security:
         - bearerAuth: []
       responses:
@@ -184,14 +166,12 @@ paths:
                 properties:
                   url:
                     type: string
-                required:
-                  - url
+                required: [url]
 
   /user/stripe-webhook:
     post:
       operationId: stripeWebhook
       tags: [user]
-      summary: Stripe webhook handler
       responses:
         "200":
           description: Acknowledged
@@ -207,8 +187,7 @@ components:
       properties:
         status:
           type: string
-      required:
-        - status
+      required: [status]
 
     Script:
       type: object
@@ -219,6 +198,11 @@ components:
           type: string
         topic:
           type: string
+        targetAudience:
+          type: string
+        tone:
+          type: string
+          enum: [Funny, Professional, Aggressive, Hype, Inspirational, Educational, Storytelling]
         platform:
           type: string
           enum: [TikTok, Instagram, YouTube]
@@ -232,6 +216,12 @@ components:
           type: string
         script:
           type: string
+        hookLab:
+          type: array
+          items:
+            type: string
+        aiReasoning:
+          type: string
         hashtags:
           type: array
           items:
@@ -243,12 +233,16 @@ components:
         - id
         - userId
         - topic
+        - targetAudience
+        - tone
         - platform
         - title
         - hook
         - body
         - callToAction
         - script
+        - hookLab
+        - aiReasoning
         - hashtags
         - createdAt
 
@@ -257,11 +251,14 @@ components:
       properties:
         topic:
           type: string
-          description: The video topic
+        targetAudience:
+          type: string
+        tone:
+          type: string
+          enum: [Funny, Professional, Aggressive, Hype, Inspirational, Educational, Storytelling]
         platform:
           type: string
           enum: [TikTok, Instagram, YouTube]
-          description: Target platform
       required:
         - topic
         - platform
@@ -280,16 +277,10 @@ components:
               type: integer
             YouTube:
               type: integer
-          required:
-            - TikTok
-            - Instagram
-            - YouTube
+          required: [TikTok, Instagram, YouTube]
         thisWeek:
           type: integer
-      required:
-        - total
-        - byPlatform
-        - thisWeek
+      required: [total, byPlatform, thisWeek]
 
     UserProfile:
       type: object
@@ -303,10 +294,7 @@ components:
         stripeCustomerId:
           type: string
           nullable: true
-      required:
-        - id
-        - isPro
-        - scriptsRemaining
+      required: [id, isPro, scriptsRemaining]
 
     LimitReachedError:
       type: object
@@ -317,7 +305,4 @@ components:
           type: string
         scriptsRemaining:
           type: integer
-      required:
-        - error
-        - code
-        - scriptsRemaining
+      required: [error, code, scriptsRemaining]

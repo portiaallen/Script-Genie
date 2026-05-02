@@ -38,7 +38,6 @@ type Awaited<O> = O extends AwaitedInput<infer T> ? T : never;
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 /**
- * Returns server health status
  * @summary Health check
  */
 export const getHealthCheckUrl = () => {
@@ -113,10 +112,6 @@ export function useHealthCheck<
   return { ...query, queryKey: queryOptions.queryKey };
 }
 
-/**
- * Returns paginated list of user's generated scripts
- * @summary List user scripts
- */
 export const getListScriptsUrl = (params?: ListScriptsParams) => {
   const normalizedParams = new URLSearchParams();
 
@@ -181,10 +176,6 @@ export type ListScriptsQueryResult = NonNullable<
 >;
 export type ListScriptsQueryError = ErrorType<unknown>;
 
-/**
- * @summary List user scripts
- */
-
 export function useListScripts<
   TData = Awaited<ReturnType<typeof listScripts>>,
   TError = ErrorType<unknown>,
@@ -208,10 +199,6 @@ export function useListScripts<
   return { ...query, queryKey: queryOptions.queryKey };
 }
 
-/**
- * Uses GPT-4o-mini to generate a structured viral video script
- * @summary Generate a new script with AI
- */
 export const getGenerateScriptUrl = () => {
   return `/api/scripts`;
 };
@@ -272,9 +259,6 @@ export type GenerateScriptMutationResult = NonNullable<
 export type GenerateScriptMutationBody = BodyType<GenerateScriptBody>;
 export type GenerateScriptMutationError = ErrorType<LimitReachedError>;
 
-/**
- * @summary Generate a new script with AI
- */
 export const useGenerateScript = <
   TError = ErrorType<LimitReachedError>,
   TContext = unknown,
@@ -295,10 +279,6 @@ export const useGenerateScript = <
   return useMutation(getGenerateScriptMutationOptions(options));
 };
 
-/**
- * Returns totals and platform breakdown for the current user
- * @summary Get script generation stats
- */
 export const getGetScriptStatsUrl = () => {
   return `/api/scripts/stats`;
 };
@@ -347,10 +327,6 @@ export type GetScriptStatsQueryResult = NonNullable<
 >;
 export type GetScriptStatsQueryError = ErrorType<unknown>;
 
-/**
- * @summary Get script generation stats
- */
-
 export function useGetScriptStats<
   TData = Awaited<ReturnType<typeof getScriptStats>>,
   TError = ErrorType<unknown>,
@@ -371,9 +347,6 @@ export function useGetScriptStats<
   return { ...query, queryKey: queryOptions.queryKey };
 }
 
-/**
- * @summary Get a specific script
- */
 export const getGetScriptUrl = (id: number) => {
   return `/api/scripts/${id}`;
 };
@@ -429,10 +402,6 @@ export type GetScriptQueryResult = NonNullable<
 >;
 export type GetScriptQueryError = ErrorType<void>;
 
-/**
- * @summary Get a specific script
- */
-
 export function useGetScript<
   TData = Awaited<ReturnType<typeof getScript>>,
   TError = ErrorType<void>,
@@ -456,9 +425,6 @@ export function useGetScript<
   return { ...query, queryKey: queryOptions.queryKey };
 }
 
-/**
- * @summary Delete a script
- */
 export const getDeleteScriptUrl = (id: number) => {
   return `/api/scripts/${id}`;
 };
@@ -517,9 +483,6 @@ export type DeleteScriptMutationResult = NonNullable<
 
 export type DeleteScriptMutationError = ErrorType<unknown>;
 
-/**
- * @summary Delete a script
- */
 export const useDeleteScript = <
   TError = ErrorType<unknown>,
   TContext = unknown,
@@ -540,9 +503,6 @@ export const useDeleteScript = <
   return useMutation(getDeleteScriptMutationOptions(options));
 };
 
-/**
- * @summary Get current user profile
- */
 export const getGetUserProfileUrl = () => {
   return `/api/user/profile`;
 };
@@ -591,10 +551,6 @@ export type GetUserProfileQueryResult = NonNullable<
 >;
 export type GetUserProfileQueryError = ErrorType<unknown>;
 
-/**
- * @summary Get current user profile
- */
-
 export function useGetUserProfile<
   TData = Awaited<ReturnType<typeof getUserProfile>>,
   TError = ErrorType<unknown>,
@@ -615,9 +571,6 @@ export function useGetUserProfile<
   return { ...query, queryKey: queryOptions.queryKey };
 }
 
-/**
- * @summary Create a Stripe checkout session for Pro upgrade
- */
 export const getCreateCheckoutUrl = () => {
   return `/api/user/checkout`;
 };
@@ -673,9 +626,6 @@ export type CreateCheckoutMutationResult = NonNullable<
 
 export type CreateCheckoutMutationError = ErrorType<unknown>;
 
-/**
- * @summary Create a Stripe checkout session for Pro upgrade
- */
 export const useCreateCheckout = <
   TError = ErrorType<unknown>,
   TContext = unknown,
@@ -696,9 +646,6 @@ export const useCreateCheckout = <
   return useMutation(getCreateCheckoutMutationOptions(options));
 };
 
-/**
- * @summary Stripe webhook handler
- */
 export const getStripeWebhookUrl = () => {
   return `/api/user/stripe-webhook`;
 };
@@ -752,9 +699,6 @@ export type StripeWebhookMutationResult = NonNullable<
 
 export type StripeWebhookMutationError = ErrorType<unknown>;
 
-/**
- * @summary Stripe webhook handler
- */
 export const useStripeWebhook = <
   TError = ErrorType<unknown>,
   TContext = unknown,

@@ -8,25 +8,17 @@
 import * as zod from "zod";
 
 /**
- * Returns server health status
  * @summary Health check
  */
 export const HealthCheckResponse = zod.object({
   status: zod.string(),
 });
 
-/**
- * Returns paginated list of user's generated scripts
- * @summary List user scripts
- */
 export const listScriptsQueryLimitDefault = 20;
 export const listScriptsQueryOffsetDefault = 0;
 
 export const ListScriptsQueryParams = zod.object({
-  platform: zod
-    .enum(["TikTok", "Instagram", "YouTube"])
-    .optional()
-    .describe("Filter by platform"),
+  platform: zod.enum(["TikTok", "Instagram", "YouTube"]).optional(),
   limit: zod.coerce.number().default(listScriptsQueryLimitDefault),
   offset: zod.coerce.number().default(listScriptsQueryOffsetDefault),
 });
@@ -37,12 +29,24 @@ export const ListScriptsResponse = zod.object({
       id: zod.number(),
       userId: zod.string(),
       topic: zod.string(),
+      targetAudience: zod.string(),
+      tone: zod.enum([
+        "Funny",
+        "Professional",
+        "Aggressive",
+        "Hype",
+        "Inspirational",
+        "Educational",
+        "Storytelling",
+      ]),
       platform: zod.enum(["TikTok", "Instagram", "YouTube"]),
       title: zod.string(),
       hook: zod.string(),
       body: zod.string(),
       callToAction: zod.string(),
       script: zod.string(),
+      hookLab: zod.array(zod.string()),
+      aiReasoning: zod.string(),
       hashtags: zod.array(zod.string()),
       createdAt: zod.coerce.date(),
     }),
@@ -50,21 +54,23 @@ export const ListScriptsResponse = zod.object({
   total: zod.number(),
 });
 
-/**
- * Uses GPT-4o-mini to generate a structured viral video script
- * @summary Generate a new script with AI
- */
 export const GenerateScriptBody = zod.object({
-  topic: zod.string().describe("The video topic"),
-  platform: zod
-    .enum(["TikTok", "Instagram", "YouTube"])
-    .describe("Target platform"),
+  topic: zod.string(),
+  targetAudience: zod.string().optional(),
+  tone: zod
+    .enum([
+      "Funny",
+      "Professional",
+      "Aggressive",
+      "Hype",
+      "Inspirational",
+      "Educational",
+      "Storytelling",
+    ])
+    .optional(),
+  platform: zod.enum(["TikTok", "Instagram", "YouTube"]),
 });
 
-/**
- * Returns totals and platform breakdown for the current user
- * @summary Get script generation stats
- */
 export const GetScriptStatsResponse = zod.object({
   total: zod.number(),
   byPlatform: zod.object({
@@ -75,9 +81,6 @@ export const GetScriptStatsResponse = zod.object({
   thisWeek: zod.number(),
 });
 
-/**
- * @summary Get a specific script
- */
 export const GetScriptParams = zod.object({
   id: zod.coerce.number(),
 });
@@ -86,26 +89,32 @@ export const GetScriptResponse = zod.object({
   id: zod.number(),
   userId: zod.string(),
   topic: zod.string(),
+  targetAudience: zod.string(),
+  tone: zod.enum([
+    "Funny",
+    "Professional",
+    "Aggressive",
+    "Hype",
+    "Inspirational",
+    "Educational",
+    "Storytelling",
+  ]),
   platform: zod.enum(["TikTok", "Instagram", "YouTube"]),
   title: zod.string(),
   hook: zod.string(),
   body: zod.string(),
   callToAction: zod.string(),
   script: zod.string(),
+  hookLab: zod.array(zod.string()),
+  aiReasoning: zod.string(),
   hashtags: zod.array(zod.string()),
   createdAt: zod.coerce.date(),
 });
 
-/**
- * @summary Delete a script
- */
 export const DeleteScriptParams = zod.object({
   id: zod.coerce.number(),
 });
 
-/**
- * @summary Get current user profile
- */
 export const GetUserProfileResponse = zod.object({
   id: zod.string(),
   isPro: zod.boolean(),
@@ -113,9 +122,6 @@ export const GetUserProfileResponse = zod.object({
   stripeCustomerId: zod.string().nullish(),
 });
 
-/**
- * @summary Create a Stripe checkout session for Pro upgrade
- */
 export const CreateCheckoutResponse = zod.object({
   url: zod.string(),
 });

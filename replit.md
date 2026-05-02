@@ -45,12 +45,16 @@ pnpm workspace monorepo using TypeScript. Full-stack Micro-SaaS app **ViralScrip
 - `id` — serial PK
 - `userId` — text (Clerk user ID)
 - `topic` — text
+- `targetAudience` — text (e.g. "Entrepreneurs aged 25-35")
+- `tone` — text enum (Funny | Professional | Aggressive | Hype | Inspirational | Educational | Storytelling)
 - `platform` — text ("TikTok" | "Instagram" | "YouTube")
 - `title` — text
 - `hook` — text (GPT-structured: attention-grabbing opener)
 - `body` — text (GPT-structured: main content with stage directions)
 - `callToAction` — text (GPT-structured: closing CTA)
 - `script` — text (combined hook+body+CTA for backwards compat / copy-all)
+- `hookLab` — text[] (5 alternate opening hooks)
+- `aiReasoning` — text (GPT explanation of why the script will perform)
 - `hashtags` — text[]
 - `createdAt` — timestamp
 
@@ -101,10 +105,18 @@ Without these secrets, the checkout button returns a 503 with a clear error mess
 ## Frontend Pages
 
 - `/` — Landing page (public, hero + features + pricing + testimonials)
-- `/dashboard` — Script history, stats (by platform + this week), search/filter, delete, PDF download, upgrade banner
-- `/generate` — Generate new script (structured Hook/Body/CTA display, copy per-section, copy-all, PDF download, free limit indicator, upgrade modal)
+- `/dashboard` — Glassmorphism UI, trending topics ticker, script history grid (platform icon + tone badge + Hook Lab/AI Insight indicators), stats, search/filter, detail modal with Hook Lab + AI Reasoning expandable sections, PDF, copy-all, upgrade banner
+- `/generate` — "Viral Strategy Studio": structured form (Topic + Target Audience + Tone grid), platform cards, generate button with glow pulse, result panel with Hook Lab (5 alternate hooks, each copyable), AI Strategy Reasoning panel, copy per-section, copy-all, PDF, recent history reload panel, free limit counter, upgrade modal
 - `/sign-in` — Clerk sign-in
 - `/sign-up` — Clerk sign-up
+
+## CSS Utilities (index.css)
+- `.glass` — backdrop-blur-md glassmorphism panel
+- `.glass-strong` — stronger glass for modals
+- `.glass-card` — hoverable glass card
+- `.ticker-track` — animated trending topics ticker
+- `.btn-glow` — pulsing purple glow on the generate button
+- `.hook-card` — shimmer hover effect for Hook Lab items
 
 ## Key Commands
 

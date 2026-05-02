@@ -9,6 +9,18 @@ export interface HealthStatus {
   status: string;
 }
 
+export type ScriptTone = (typeof ScriptTone)[keyof typeof ScriptTone];
+
+export const ScriptTone = {
+  Funny: "Funny",
+  Professional: "Professional",
+  Aggressive: "Aggressive",
+  Hype: "Hype",
+  Inspirational: "Inspirational",
+  Educational: "Educational",
+  Storytelling: "Storytelling",
+} as const;
+
 export type ScriptPlatform =
   (typeof ScriptPlatform)[keyof typeof ScriptPlatform];
 
@@ -22,19 +34,33 @@ export interface Script {
   id: number;
   userId: string;
   topic: string;
+  targetAudience: string;
+  tone: ScriptTone;
   platform: ScriptPlatform;
   title: string;
   hook: string;
   body: string;
   callToAction: string;
   script: string;
+  hookLab: string[];
+  aiReasoning: string;
   hashtags: string[];
   createdAt: string;
 }
 
-/**
- * Target platform
- */
+export type GenerateScriptBodyTone =
+  (typeof GenerateScriptBodyTone)[keyof typeof GenerateScriptBodyTone];
+
+export const GenerateScriptBodyTone = {
+  Funny: "Funny",
+  Professional: "Professional",
+  Aggressive: "Aggressive",
+  Hype: "Hype",
+  Inspirational: "Inspirational",
+  Educational: "Educational",
+  Storytelling: "Storytelling",
+} as const;
+
 export type GenerateScriptBodyPlatform =
   (typeof GenerateScriptBodyPlatform)[keyof typeof GenerateScriptBodyPlatform];
 
@@ -45,9 +71,9 @@ export const GenerateScriptBodyPlatform = {
 } as const;
 
 export interface GenerateScriptBody {
-  /** The video topic */
   topic: string;
-  /** Target platform */
+  targetAudience?: string;
+  tone?: GenerateScriptBodyTone;
   platform: GenerateScriptBodyPlatform;
 }
 
@@ -77,9 +103,6 @@ export interface LimitReachedError {
 }
 
 export type ListScriptsParams = {
-  /**
-   * Filter by platform
-   */
   platform?: ListScriptsPlatform;
   limit?: number;
   offset?: number;
