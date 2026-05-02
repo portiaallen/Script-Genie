@@ -297,7 +297,7 @@ export default function Generate() {
 
             {!isPro && scriptsRemaining <= 0 && !limitError && (
               <Button variant="outline" className="w-full gap-2" onClick={() => setShowUpgrade(true)}>
-                <Crown className="w-4 h-4 text-primary" /> Upgrade to Pro — Unlimited Scripts
+                <Crown className="w-4 h-4 text-primary" /> Upgrade to Pro — from $9.99/mo
               </Button>
             )}
           </div>
