@@ -10,6 +10,8 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: scripts
+    description: AI-generated video scripts
 paths:
   /healthz:
     get:
@@ -24,7 +26,129 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /scripts:
+    get:
+      operationId: listScripts
+      tags: [scripts]
+      summary: List user scripts
+      description: Returns paginated list of user's generated scripts
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: platform
+          in: query
+          schema:
+            type: string
+            enum: [TikTok, Instagram, YouTube]
+          description: Filter by platform
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        "200":
+          description: List of scripts
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  scripts:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Script"
+                  total:
+                    type: integer
+                required:
+                  - scripts
+                  - total
+    post:
+      operationId: generateScript
+      tags: [scripts]
+      summary: Generate a new script with AI
+      description: Uses GPT to generate a high-retention video script, title and hashtags
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenerateScriptBody"
+      responses:
+        "201":
+          description: Generated script
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Script"
+
+  /scripts/stats:
+    get:
+      operationId: getScriptStats
+      tags: [scripts]
+      summary: Get script generation stats
+      description: Returns totals and platform breakdown for the current user
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScriptStats"
+
+  /scripts/{id}:
+    get:
+      operationId: getScript
+      tags: [scripts]
+      summary: Get a specific script
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Script
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Script"
+        "404":
+          description: Not found
+    delete:
+      operationId: deleteScript
+      tags: [scripts]
+      summary: Delete a script
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
   schemas:
     HealthStatus:
       type: object
@@ -34,3 +158,74 @@ components:
       required:
         - status
 
+    Script:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: string
+        topic:
+          type: string
+        platform:
+          type: string
+          enum: [TikTok, Instagram, YouTube]
+        title:
+          type: string
+        script:
+          type: string
+        hashtags:
+          type: array
+          items:
+            type: string
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - userId
+        - topic
+        - platform
+        - title
+        - script
+        - hashtags
+        - createdAt
+
+    GenerateScriptBody:
+      type: object
+      properties:
+        topic:
+          type: string
+          description: The video topic
+        platform:
+          type: string
+          enum: [TikTok, Instagram, YouTube]
+          description: Target platform
+      required:
+        - topic
+        - platform
+
+    ScriptStats:
+      type: object
+      properties:
+        total:
+          type: integer
+        byPlatform:
+          type: object
+          properties:
+            TikTok:
+              type: integer
+            Instagram:
+              type: integer
+            YouTube:
+              type: integer
+          required:
+            - TikTok
+            - Instagram
+            - YouTube
+        thisWeek:
+          type: integer
+      required:
+        - total
+        - byPlatform
+        - thisWeek

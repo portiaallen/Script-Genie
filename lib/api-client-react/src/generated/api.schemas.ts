@@ -8,3 +8,77 @@
 export interface HealthStatus {
   status: string;
 }
+
+export type ScriptPlatform =
+  (typeof ScriptPlatform)[keyof typeof ScriptPlatform];
+
+export const ScriptPlatform = {
+  TikTok: "TikTok",
+  Instagram: "Instagram",
+  YouTube: "YouTube",
+} as const;
+
+export interface Script {
+  id: number;
+  userId: string;
+  topic: string;
+  platform: ScriptPlatform;
+  title: string;
+  script: string;
+  hashtags: string[];
+  createdAt: string;
+}
+
+/**
+ * Target platform
+ */
+export type GenerateScriptBodyPlatform =
+  (typeof GenerateScriptBodyPlatform)[keyof typeof GenerateScriptBodyPlatform];
+
+export const GenerateScriptBodyPlatform = {
+  TikTok: "TikTok",
+  Instagram: "Instagram",
+  YouTube: "YouTube",
+} as const;
+
+export interface GenerateScriptBody {
+  /** The video topic */
+  topic: string;
+  /** Target platform */
+  platform: GenerateScriptBodyPlatform;
+}
+
+export type ScriptStatsByPlatform = {
+  TikTok: number;
+  Instagram: number;
+  YouTube: number;
+};
+
+export interface ScriptStats {
+  total: number;
+  byPlatform: ScriptStatsByPlatform;
+  thisWeek: number;
+}
+
+export type ListScriptsParams = {
+  /**
+   * Filter by platform
+   */
+  platform?: ListScriptsPlatform;
+  limit?: number;
+  offset?: number;
+};
+
+export type ListScriptsPlatform =
+  (typeof ListScriptsPlatform)[keyof typeof ListScriptsPlatform];
+
+export const ListScriptsPlatform = {
+  TikTok: "TikTok",
+  Instagram: "Instagram",
+  YouTube: "YouTube",
+} as const;
+
+export type ListScripts200 = {
+  scripts: Script[];
+  total: number;
+};

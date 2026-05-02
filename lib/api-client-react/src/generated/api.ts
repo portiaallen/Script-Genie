@@ -5,18 +5,28 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import type {
+  MutationFunction,
   QueryFunction,
   QueryKey,
+  UseMutationOptions,
+  UseMutationResult,
   UseQueryOptions,
   UseQueryResult,
 } from "@tanstack/react-query";
 
-import type { HealthStatus } from "./api.schemas";
+import type {
+  GenerateScriptBody,
+  HealthStatus,
+  ListScripts200,
+  ListScriptsParams,
+  Script,
+  ScriptStats,
+} from "./api.schemas";
 
 import { customFetch } from "../custom-fetch";
-import type { ErrorType } from "../custom-fetch";
+import type { ErrorType, BodyType } from "../custom-fetch";
 
 type AwaitedInput<T> = PromiseLike<T> | T;
 
@@ -99,3 +109,430 @@ export function useHealthCheck<
 
   return { ...query, queryKey: queryOptions.queryKey };
 }
+
+/**
+ * Returns paginated list of user's generated scripts
+ * @summary List user scripts
+ */
+export const getListScriptsUrl = (params?: ListScriptsParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/scripts?${stringifiedParams}`
+    : `/api/scripts`;
+};
+
+export const listScripts = async (
+  params?: ListScriptsParams,
+  options?: RequestInit,
+): Promise<ListScripts200> => {
+  return customFetch<ListScripts200>(getListScriptsUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListScriptsQueryKey = (params?: ListScriptsParams) => {
+  return [`/api/scripts`, ...(params ? [params] : [])] as const;
+};
+
+export const getListScriptsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listScripts>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: ListScriptsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listScripts>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListScriptsQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listScripts>>> = ({
+    signal,
+  }) => listScripts(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listScripts>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListScriptsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listScripts>>
+>;
+export type ListScriptsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List user scripts
+ */
+
+export function useListScripts<
+  TData = Awaited<ReturnType<typeof listScripts>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: ListScriptsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listScripts>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListScriptsQueryOptions(params, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * Uses GPT to generate a high-retention video script, title and hashtags
+ * @summary Generate a new script with AI
+ */
+export const getGenerateScriptUrl = () => {
+  return `/api/scripts`;
+};
+
+export const generateScript = async (
+  generateScriptBody: GenerateScriptBody,
+  options?: RequestInit,
+): Promise<Script> => {
+  return customFetch<Script>(getGenerateScriptUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(generateScriptBody),
+  });
+};
+
+export const getGenerateScriptMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof generateScript>>,
+    TError,
+    { data: BodyType<GenerateScriptBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof generateScript>>,
+  TError,
+  { data: BodyType<GenerateScriptBody> },
+  TContext
+> => {
+  const mutationKey = ["generateScript"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof generateScript>>,
+    { data: BodyType<GenerateScriptBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return generateScript(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type GenerateScriptMutationResult = NonNullable<
+  Awaited<ReturnType<typeof generateScript>>
+>;
+export type GenerateScriptMutationBody = BodyType<GenerateScriptBody>;
+export type GenerateScriptMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Generate a new script with AI
+ */
+export const useGenerateScript = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof generateScript>>,
+    TError,
+    { data: BodyType<GenerateScriptBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof generateScript>>,
+  TError,
+  { data: BodyType<GenerateScriptBody> },
+  TContext
+> => {
+  return useMutation(getGenerateScriptMutationOptions(options));
+};
+
+/**
+ * Returns totals and platform breakdown for the current user
+ * @summary Get script generation stats
+ */
+export const getGetScriptStatsUrl = () => {
+  return `/api/scripts/stats`;
+};
+
+export const getScriptStats = async (
+  options?: RequestInit,
+): Promise<ScriptStats> => {
+  return customFetch<ScriptStats>(getGetScriptStatsUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetScriptStatsQueryKey = () => {
+  return [`/api/scripts/stats`] as const;
+};
+
+export const getGetScriptStatsQueryOptions = <
+  TData = Awaited<ReturnType<typeof getScriptStats>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getScriptStats>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetScriptStatsQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getScriptStats>>> = ({
+    signal,
+  }) => getScriptStats({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getScriptStats>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetScriptStatsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getScriptStats>>
+>;
+export type GetScriptStatsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Get script generation stats
+ */
+
+export function useGetScriptStats<
+  TData = Awaited<ReturnType<typeof getScriptStats>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getScriptStats>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetScriptStatsQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Get a specific script
+ */
+export const getGetScriptUrl = (id: number) => {
+  return `/api/scripts/${id}`;
+};
+
+export const getScript = async (
+  id: number,
+  options?: RequestInit,
+): Promise<Script> => {
+  return customFetch<Script>(getGetScriptUrl(id), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetScriptQueryKey = (id: number) => {
+  return [`/api/scripts/${id}`] as const;
+};
+
+export const getGetScriptQueryOptions = <
+  TData = Awaited<ReturnType<typeof getScript>>,
+  TError = ErrorType<void>,
+>(
+  id: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getScript>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetScriptQueryKey(id);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getScript>>> = ({
+    signal,
+  }) => getScript(id, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!id,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getScript>>, TError, TData> & {
+    queryKey: QueryKey;
+  };
+};
+
+export type GetScriptQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getScript>>
+>;
+export type GetScriptQueryError = ErrorType<void>;
+
+/**
+ * @summary Get a specific script
+ */
+
+export function useGetScript<
+  TData = Awaited<ReturnType<typeof getScript>>,
+  TError = ErrorType<void>,
+>(
+  id: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getScript>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetScriptQueryOptions(id, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Delete a script
+ */
+export const getDeleteScriptUrl = (id: number) => {
+  return `/api/scripts/${id}`;
+};
+
+export const deleteScript = async (
+  id: number,
+  options?: RequestInit,
+): Promise<void> => {
+  return customFetch<void>(getDeleteScriptUrl(id), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getDeleteScriptMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteScript>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteScript>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  const mutationKey = ["deleteScript"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteScript>>,
+    { id: number }
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return deleteScript(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteScriptMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteScript>>
+>;
+
+export type DeleteScriptMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Delete a script
+ */
+export const useDeleteScript = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteScript>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof deleteScript>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  return useMutation(getDeleteScriptMutationOptions(options));
+};

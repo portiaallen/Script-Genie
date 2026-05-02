@@ -14,3 +14,85 @@ import * as zod from "zod";
 export const HealthCheckResponse = zod.object({
   status: zod.string(),
 });
+
+/**
+ * Returns paginated list of user's generated scripts
+ * @summary List user scripts
+ */
+export const listScriptsQueryLimitDefault = 20;
+export const listScriptsQueryOffsetDefault = 0;
+
+export const ListScriptsQueryParams = zod.object({
+  platform: zod
+    .enum(["TikTok", "Instagram", "YouTube"])
+    .optional()
+    .describe("Filter by platform"),
+  limit: zod.coerce.number().default(listScriptsQueryLimitDefault),
+  offset: zod.coerce.number().default(listScriptsQueryOffsetDefault),
+});
+
+export const ListScriptsResponse = zod.object({
+  scripts: zod.array(
+    zod.object({
+      id: zod.number(),
+      userId: zod.string(),
+      topic: zod.string(),
+      platform: zod.enum(["TikTok", "Instagram", "YouTube"]),
+      title: zod.string(),
+      script: zod.string(),
+      hashtags: zod.array(zod.string()),
+      createdAt: zod.coerce.date(),
+    }),
+  ),
+  total: zod.number(),
+});
+
+/**
+ * Uses GPT to generate a high-retention video script, title and hashtags
+ * @summary Generate a new script with AI
+ */
+export const GenerateScriptBody = zod.object({
+  topic: zod.string().describe("The video topic"),
+  platform: zod
+    .enum(["TikTok", "Instagram", "YouTube"])
+    .describe("Target platform"),
+});
+
+/**
+ * Returns totals and platform breakdown for the current user
+ * @summary Get script generation stats
+ */
+export const GetScriptStatsResponse = zod.object({
+  total: zod.number(),
+  byPlatform: zod.object({
+    TikTok: zod.number(),
+    Instagram: zod.number(),
+    YouTube: zod.number(),
+  }),
+  thisWeek: zod.number(),
+});
+
+/**
+ * @summary Get a specific script
+ */
+export const GetScriptParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const GetScriptResponse = zod.object({
+  id: zod.number(),
+  userId: zod.string(),
+  topic: zod.string(),
+  platform: zod.enum(["TikTok", "Instagram", "YouTube"]),
+  title: zod.string(),
+  script: zod.string(),
+  hashtags: zod.array(zod.string()),
+  createdAt: zod.coerce.date(),
+});
+
+/**
+ * @summary Delete a script
+ */
+export const DeleteScriptParams = zod.object({
+  id: zod.coerce.number(),
+});
