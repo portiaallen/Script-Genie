@@ -1,4 +1,4 @@
-import { pgTable, serial, text, timestamp, integer } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -10,6 +10,9 @@ export const scriptsTable = pgTable("scripts", {
   topic: text("topic").notNull(),
   platform: text("platform", { enum: platformEnum }).notNull(),
   title: text("title").notNull(),
+  hook: text("hook").notNull().default(""),
+  body: text("body").notNull().default(""),
+  callToAction: text("call_to_action").notNull().default(""),
   script: text("script").notNull(),
   hashtags: text("hashtags").array().notNull().default([]),
   createdAt: timestamp("created_at").defaultNow().notNull(),

@@ -15,16 +15,18 @@ pnpm workspace monorepo using TypeScript. Full-stack Micro-SaaS app **ViralScrip
 - **Database**: PostgreSQL + Drizzle ORM
 - **Validation**: Zod, drizzle-zod
 - **Auth**: Clerk (Google + email/password) via `@clerk/react@^6` + `@clerk/express`
-- **AI**: OpenAI GPT via Replit AI Integrations (`@workspace/integrations-openai-ai-server`)
+- **AI**: OpenAI GPT-4o-mini via Replit AI Integrations (`@workspace/integrations-openai-ai-server`)
+- **Payments**: Stripe (npm package directly — NOT Replit connector, user dismissed it)
 - **API codegen**: Orval (from OpenAPI spec → React Query hooks + Zod validators)
 - **Build**: esbuild (server bundle)
 - **Routing**: Wouter
+- **PDF export**: jsPDF
 
 ## Artifacts
 
 | Name | Dir | Path | Description |
 |------|-----|------|-------------|
-| API Server | `artifacts/api-server` | `/api` | Express backend, Clerk auth, OpenAI scripts CRUD |
+| API Server | `artifacts/api-server` | `/api` | Express backend, Clerk auth, OpenAI scripts CRUD, Stripe checkout |
 | ViralScript AI | `artifacts/viral-script` | `/` | React frontend, landing + dashboard + generate pages |
 
 ## Libraries
@@ -34,20 +36,31 @@ pnpm workspace monorepo using TypeScript. Full-stack Micro-SaaS app **ViralScrip
 | `lib/api-spec` | OpenAPI spec + Orval codegen config |
 | `lib/api-zod` | Generated Zod validators from OpenAPI spec |
 | `lib/api-client-react` | Generated React Query hooks from OpenAPI spec |
-| `lib/db` | Drizzle schema + DB client (`scriptsTable`) |
+| `lib/db` | Drizzle schema + DB client (`scriptsTable`, `usersTable`) |
 | `lib/integrations-openai-ai-server` | OpenAI client for server (Replit AI Integrations) |
-| `lib/integrations-openai-ai-react` | OpenAI client for React (unused currently) |
 
 ## DB Schema
 
-`scriptsTable` (PostgreSQL):
+### `scriptsTable`
 - `id` — serial PK
 - `userId` — text (Clerk user ID)
 - `topic` — text
 - `platform` — text ("TikTok" | "Instagram" | "YouTube")
 - `title` — text
-- `script` — text
+- `hook` — text (GPT-structured: attention-grabbing opener)
+- `body` — text (GPT-structured: main content with stage directions)
+- `callToAction` — text (GPT-structured: closing CTA)
+- `script` — text (combined hook+body+CTA for backwards compat / copy-all)
 - `hashtags` — text[]
+- `createdAt` — timestamp
+
+### `usersTable`
+- `id` — text PK (Clerk user ID)
+- `email` — text (nullable)
+- `isPro` — boolean (default false)
+- `scriptsRemaining` — integer (default 3, free tier limit)
+- `stripeCustomerId` — text (nullable)
+- `stripeSubscriptionId` — text (nullable)
 - `createdAt` — timestamp
 
 ## API Routes
@@ -55,16 +68,41 @@ pnpm workspace monorepo using TypeScript. Full-stack Micro-SaaS app **ViralScrip
 All under `/api`:
 - `GET /api/healthz` — health check
 - `GET /api/scripts` — list user's scripts (auth required)
-- `POST /api/scripts` — generate script via OpenAI (auth required)
+- `POST /api/scripts` — generate script via GPT-4o-mini (auth required, checks quota)
 - `GET /api/scripts/stats` — script stats (auth required)
 - `GET /api/scripts/:id` — get single script (auth required)
 - `DELETE /api/scripts/:id` — delete script (auth required)
+- `GET /api/user/profile` — get user profile: isPro, scriptsRemaining (auth required)
+- `POST /api/user/checkout` — create Stripe checkout session (auth required)
+- `POST /api/user/stripe-webhook` — Stripe webhook handler (no auth)
+
+## Free Tier Logic
+
+- New users get 3 free script generations (`scriptsRemaining = 3`)
+- Each generation deducts 1 from `scriptsRemaining`
+- At 0 remaining, POST /api/scripts returns 402 with `code: "LIMIT_REACHED"`
+- Frontend shows upgrade modal on 402
+- Pro users (`isPro = true`) have `scriptsRemaining = 999999` (unlimited)
+
+## Stripe Setup (REQUIRED for payments to work)
+
+The Replit Stripe connector was dismissed. Stripe is integrated via the `stripe` npm package directly.
+
+**Required secrets** (add via Replit Secrets):
+- `STRIPE_SECRET_KEY` — Stripe secret key (sk_live_... or sk_test_...)
+- `STRIPE_PRICE_ID` — Stripe Price ID for the $19/mo subscription (price_...)
+- `STRIPE_WEBHOOK_SECRET` — Stripe webhook signing secret (whsec_...)
+- `APP_BASE_URL` — production app URL for Stripe redirect (e.g. https://yourapp.replit.app)
+
+**Stripe webhook events to handle**: `checkout.session.completed`, `customer.subscription.deleted`
+
+Without these secrets, the checkout button returns a 503 with a clear error message — nothing breaks.
 
 ## Frontend Pages
 
-- `/` — Landing page (public, hero + features + pricing teaser + testimonials)
-- `/dashboard` — Script history, stats, search/filter, delete (auth required)
-- `/generate` — Generate new script (auth required)
+- `/` — Landing page (public, hero + features + pricing + testimonials)
+- `/dashboard` — Script history, stats (by platform + this week), search/filter, delete, PDF download, upgrade banner
+- `/generate` — Generate new script (structured Hook/Body/CTA display, copy per-section, copy-all, PDF download, free limit indicator, upgrade modal)
 - `/sign-in` — Clerk sign-in
 - `/sign-up` — Clerk sign-up
 
@@ -77,9 +115,10 @@ All under `/api`:
 
 ## Important Notes
 
-- Orval regenerates `lib/api-zod/src/index.ts` on each codegen run. The codegen script post-processes this to `export * from "./generated/api"` only — do NOT add the types barrel back.
-- Clerk proxy middleware is set up in `artifacts/api-server/src/middlewares/clerkProxyMiddleware.ts` (production-only proxy).
-- OpenAI model used: `gpt-5-mini` via Replit AI Integrations base URL.
-- Auth uses `@clerk/react@^6` on frontend and `@clerk/express` on backend. `publishableKeyFromHost` comes from `@clerk/react/internal`.
+- Orval regenerates `lib/api-zod/src/index.ts` on each codegen run. The codegen script post-processes this to `export * from "./generated/api"` only.
+- Clerk proxy middleware is set up in `artifacts/api-server/src/middlewares/clerkProxyMiddleware.ts`.
+- OpenAI model: `gpt-4o-mini` via Replit AI Integrations.
+- Raw body capture for Stripe webhook is done before `express.json()` middleware for the `/api/user/stripe-webhook` path.
+- Auth uses `@clerk/react@^6` on frontend and `@clerk/express` on backend.
 
 See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details.

@@ -39,6 +39,9 @@ export const ListScriptsResponse = zod.object({
       topic: zod.string(),
       platform: zod.enum(["TikTok", "Instagram", "YouTube"]),
       title: zod.string(),
+      hook: zod.string(),
+      body: zod.string(),
+      callToAction: zod.string(),
       script: zod.string(),
       hashtags: zod.array(zod.string()),
       createdAt: zod.coerce.date(),
@@ -48,7 +51,7 @@ export const ListScriptsResponse = zod.object({
 });
 
 /**
- * Uses GPT to generate a high-retention video script, title and hashtags
+ * Uses GPT-4o-mini to generate a structured viral video script
  * @summary Generate a new script with AI
  */
 export const GenerateScriptBody = zod.object({
@@ -85,6 +88,9 @@ export const GetScriptResponse = zod.object({
   topic: zod.string(),
   platform: zod.enum(["TikTok", "Instagram", "YouTube"]),
   title: zod.string(),
+  hook: zod.string(),
+  body: zod.string(),
+  callToAction: zod.string(),
   script: zod.string(),
   hashtags: zod.array(zod.string()),
   createdAt: zod.coerce.date(),
@@ -95,4 +101,21 @@ export const GetScriptResponse = zod.object({
  */
 export const DeleteScriptParams = zod.object({
   id: zod.coerce.number(),
+});
+
+/**
+ * @summary Get current user profile
+ */
+export const GetUserProfileResponse = zod.object({
+  id: zod.string(),
+  isPro: zod.boolean(),
+  scriptsRemaining: zod.number(),
+  stripeCustomerId: zod.string().nullish(),
+});
+
+/**
+ * @summary Create a Stripe checkout session for Pro upgrade
+ */
+export const CreateCheckoutResponse = zod.object({
+  url: zod.string(),
 });

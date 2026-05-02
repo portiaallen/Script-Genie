@@ -12,6 +12,8 @@ tags:
     description: Health operations
   - name: scripts
     description: AI-generated video scripts
+  - name: user
+    description: User profile and billing
 paths:
   /healthz:
     get:
@@ -73,7 +75,7 @@ paths:
       operationId: generateScript
       tags: [scripts]
       summary: Generate a new script with AI
-      description: Uses GPT to generate a high-retention video script, title and hashtags
+      description: Uses GPT-4o-mini to generate a structured viral video script
       security:
         - bearerAuth: []
       requestBody:
@@ -89,6 +91,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Script"
+        "402":
+          description: Free limit reached — upgrade required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LimitReachedError"
 
   /scripts/stats:
     get:
@@ -144,6 +152,50 @@ paths:
         "204":
           description: Deleted
 
+  /user/profile:
+    get:
+      operationId: getUserProfile
+      tags: [user]
+      summary: Get current user profile
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: User profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+
+  /user/checkout:
+    post:
+      operationId: createCheckout
+      tags: [user]
+      summary: Create a Stripe checkout session for Pro upgrade
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Checkout URL
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  url:
+                    type: string
+                required:
+                  - url
+
+  /user/stripe-webhook:
+    post:
+      operationId: stripeWebhook
+      tags: [user]
+      summary: Stripe webhook handler
+      responses:
+        "200":
+          description: Acknowledged
+
 components:
   securitySchemes:
     bearerAuth:
@@ -172,6 +224,12 @@ components:
           enum: [TikTok, Instagram, YouTube]
         title:
           type: string
+        hook:
+          type: string
+        body:
+          type: string
+        callToAction:
+          type: string
         script:
           type: string
         hashtags:
@@ -187,6 +245,9 @@ components:
         - topic
         - platform
         - title
+        - hook
+        - body
+        - callToAction
         - script
         - hashtags
         - createdAt
@@ -229,3 +290,34 @@ components:
         - total
         - byPlatform
         - thisWeek
+
+    UserProfile:
+      type: object
+      properties:
+        id:
+          type: string
+        isPro:
+          type: boolean
+        scriptsRemaining:
+          type: integer
+        stripeCustomerId:
+          type: string
+          nullable: true
+      required:
+        - id
+        - isPro
+        - scriptsRemaining
+
+    LimitReachedError:
+      type: object
+      properties:
+        error:
+          type: string
+        code:
+          type: string
+        scriptsRemaining:
+          type: integer
+      required:
+        - error
+        - code
+        - scriptsRemaining

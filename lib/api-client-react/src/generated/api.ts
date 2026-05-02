@@ -17,12 +17,15 @@ import type {
 } from "@tanstack/react-query";
 
 import type {
+  CreateCheckout200,
   GenerateScriptBody,
   HealthStatus,
+  LimitReachedError,
   ListScripts200,
   ListScriptsParams,
   Script,
   ScriptStats,
+  UserProfile,
 } from "./api.schemas";
 
 import { customFetch } from "../custom-fetch";
@@ -206,7 +209,7 @@ export function useListScripts<
 }
 
 /**
- * Uses GPT to generate a high-retention video script, title and hashtags
+ * Uses GPT-4o-mini to generate a structured viral video script
  * @summary Generate a new script with AI
  */
 export const getGenerateScriptUrl = () => {
@@ -226,7 +229,7 @@ export const generateScript = async (
 };
 
 export const getGenerateScriptMutationOptions = <
-  TError = ErrorType<unknown>,
+  TError = ErrorType<LimitReachedError>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -267,13 +270,13 @@ export type GenerateScriptMutationResult = NonNullable<
   Awaited<ReturnType<typeof generateScript>>
 >;
 export type GenerateScriptMutationBody = BodyType<GenerateScriptBody>;
-export type GenerateScriptMutationError = ErrorType<unknown>;
+export type GenerateScriptMutationError = ErrorType<LimitReachedError>;
 
 /**
  * @summary Generate a new script with AI
  */
 export const useGenerateScript = <
-  TError = ErrorType<unknown>,
+  TError = ErrorType<LimitReachedError>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -535,4 +538,239 @@ export const useDeleteScript = <
   TContext
 > => {
   return useMutation(getDeleteScriptMutationOptions(options));
+};
+
+/**
+ * @summary Get current user profile
+ */
+export const getGetUserProfileUrl = () => {
+  return `/api/user/profile`;
+};
+
+export const getUserProfile = async (
+  options?: RequestInit,
+): Promise<UserProfile> => {
+  return customFetch<UserProfile>(getGetUserProfileUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetUserProfileQueryKey = () => {
+  return [`/api/user/profile`] as const;
+};
+
+export const getGetUserProfileQueryOptions = <
+  TData = Awaited<ReturnType<typeof getUserProfile>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getUserProfile>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetUserProfileQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getUserProfile>>> = ({
+    signal,
+  }) => getUserProfile({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getUserProfile>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetUserProfileQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getUserProfile>>
+>;
+export type GetUserProfileQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Get current user profile
+ */
+
+export function useGetUserProfile<
+  TData = Awaited<ReturnType<typeof getUserProfile>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getUserProfile>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetUserProfileQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Create a Stripe checkout session for Pro upgrade
+ */
+export const getCreateCheckoutUrl = () => {
+  return `/api/user/checkout`;
+};
+
+export const createCheckout = async (
+  options?: RequestInit,
+): Promise<CreateCheckout200> => {
+  return customFetch<CreateCheckout200>(getCreateCheckoutUrl(), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getCreateCheckoutMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createCheckout>>,
+    TError,
+    void,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createCheckout>>,
+  TError,
+  void,
+  TContext
+> => {
+  const mutationKey = ["createCheckout"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createCheckout>>,
+    void
+  > = () => {
+    return createCheckout(requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateCheckoutMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createCheckout>>
+>;
+
+export type CreateCheckoutMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Create a Stripe checkout session for Pro upgrade
+ */
+export const useCreateCheckout = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createCheckout>>,
+    TError,
+    void,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof createCheckout>>,
+  TError,
+  void,
+  TContext
+> => {
+  return useMutation(getCreateCheckoutMutationOptions(options));
+};
+
+/**
+ * @summary Stripe webhook handler
+ */
+export const getStripeWebhookUrl = () => {
+  return `/api/user/stripe-webhook`;
+};
+
+export const stripeWebhook = async (options?: RequestInit): Promise<void> => {
+  return customFetch<void>(getStripeWebhookUrl(), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getStripeWebhookMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof stripeWebhook>>,
+    TError,
+    void,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof stripeWebhook>>,
+  TError,
+  void,
+  TContext
+> => {
+  const mutationKey = ["stripeWebhook"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof stripeWebhook>>,
+    void
+  > = () => {
+    return stripeWebhook(requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type StripeWebhookMutationResult = NonNullable<
+  Awaited<ReturnType<typeof stripeWebhook>>
+>;
+
+export type StripeWebhookMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Stripe webhook handler
+ */
+export const useStripeWebhook = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof stripeWebhook>>,
+    TError,
+    void,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof stripeWebhook>>,
+  TError,
+  void,
+  TContext
+> => {
+  return useMutation(getStripeWebhookMutationOptions(options));
 };

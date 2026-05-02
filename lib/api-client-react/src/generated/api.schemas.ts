@@ -24,6 +24,9 @@ export interface Script {
   topic: string;
   platform: ScriptPlatform;
   title: string;
+  hook: string;
+  body: string;
+  callToAction: string;
   script: string;
   hashtags: string[];
   createdAt: string;
@@ -60,6 +63,19 @@ export interface ScriptStats {
   thisWeek: number;
 }
 
+export interface UserProfile {
+  id: string;
+  isPro: boolean;
+  scriptsRemaining: number;
+  stripeCustomerId?: string | null;
+}
+
+export interface LimitReachedError {
+  error: string;
+  code: string;
+  scriptsRemaining: number;
+}
+
 export type ListScriptsParams = {
   /**
    * Filter by platform
@@ -81,4 +97,8 @@ export const ListScriptsPlatform = {
 export type ListScripts200 = {
   scripts: Script[];
   total: number;
+};
+
+export type CreateCheckout200 = {
+  url: string;
 };
