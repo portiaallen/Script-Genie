@@ -83,6 +83,9 @@ export default function Landing() {
             <span className="font-bold text-lg">ViralScript AI</span>
           </div>
           <div className="flex items-center gap-3">
+            <Button variant="ghost" size="sm" onClick={() => setLocation("/guide")} className="gap-1.5 hidden sm:flex">
+              <BookOpen className="w-3.5 h-3.5" /> Guide
+            </Button>
             <Button variant="ghost" size="sm" onClick={() => setLocation("/sign-in")}>Sign In</Button>
             <Button size="sm" onClick={() => setLocation("/sign-up")} className="gap-1">
               Get Started <ArrowRight className="w-3.5 h-3.5" />

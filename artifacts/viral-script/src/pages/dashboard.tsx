@@ -173,6 +173,9 @@ export default function Dashboard() {
                 <Crown className="w-3.5 h-3.5" /> Upgrade
               </Button>
             )}
+            <Button variant="ghost" size="sm" onClick={() => setLocation("/guide")} className="gap-1.5 hidden sm:flex">
+              <BookOpen className="w-3.5 h-3.5" /> Guide
+            </Button>
             <Button size="sm" onClick={() => setLocation("/generate")} className="gap-1.5">
               <Plus className="w-3.5 h-3.5" /> New Script
             </Button>

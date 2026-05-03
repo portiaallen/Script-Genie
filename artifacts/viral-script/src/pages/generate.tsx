@@ -179,6 +179,9 @@ export default function Generate() {
                 <Crown className="w-3 h-3" /> Pro
               </span>
             )}
+            <Button variant="ghost" size="sm" onClick={() => setLocation("/guide")} className="gap-1.5 hidden sm:flex">
+              <BookOpen className="w-4 h-4" /> Guide
+            </Button>
             <Button variant="ghost" size="sm" onClick={() => setLocation("/dashboard")} className="gap-1.5">
               <LayoutDashboard className="w-4 h-4" /> Dashboard
             </Button>
