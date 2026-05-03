@@ -1,5 +1,5 @@
 import { useLocation } from "wouter";
-import { Zap, TrendingUp, Clock, Shield, Star, ArrowRight, Play, FlaskConical, Brain, Crown } from "lucide-react";
+import { Zap, TrendingUp, Clock, Shield, Star, ArrowRight, Play, FlaskConical, Brain, Crown, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const MONTHLY_LINK = "https://buy.stripe.com/7sY3cv4n8aKA19z57n5gc00";
