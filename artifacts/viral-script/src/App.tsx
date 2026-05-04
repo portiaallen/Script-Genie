@@ -22,6 +22,7 @@ import Landing from "@/pages/landing";
 import Dashboard from "@/pages/dashboard";
 import Generate from "@/pages/generate";
 import Guide from "@/pages/guide";
+import Admin from "@/pages/admin";
 import NotFound from "@/pages/not-found";
 
 const queryClient = new QueryClient({
@@ -212,6 +213,7 @@ function AppRoutes() {
             <Route path="/dashboard" component={ProtectedDashboard} />
             <Route path="/generate" component={ProtectedGenerate} />
             <Route path="/guide" component={Guide} />
+            <Route path="/admin" component={Admin} />
             <Route path="/sign-in/*?" component={SignInPage} />
             <Route path="/sign-up/*?" component={SignUpPage} />
             <Route component={NotFound} />
