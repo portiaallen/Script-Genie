@@ -173,7 +173,7 @@ export default function Dashboard() {
                 <Crown className="w-3.5 h-3.5" /> Upgrade
               </Button>
             )}
-            <Button variant="ghost" size="sm" onClick={() => setLocation("/guide")} className="gap-1.5 hidden sm:flex">
+            <Button variant="ghost" size="sm" onClick={() => setLocation("/guide")} className="gap-1.5">
               <BookOpen className="w-3.5 h-3.5" /> Guide
             </Button>
             <Button size="sm" onClick={() => setLocation("/generate")} className="gap-1.5">
@@ -235,6 +235,22 @@ export default function Dashboard() {
               </>
             )}
           </div>
+        </div>
+
+        {/* Guide banner */}
+        <div className="mb-8 flex items-center justify-between gap-4 bg-gradient-to-r from-primary/10 to-purple-600/5 border border-primary/20 rounded-xl p-4">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-lg bg-primary/15 flex items-center justify-center flex-shrink-0">
+              <BookOpen className="w-4 h-4 text-primary" />
+            </div>
+            <div>
+              <div className="text-sm font-semibold">Creator Guide</div>
+              <div className="text-xs text-muted-foreground">How to film, deliver, and post your scripts — plus recommended tools.</div>
+            </div>
+          </div>
+          <Button size="sm" variant="outline" className="border-primary/30 text-primary flex-shrink-0 gap-1.5" onClick={() => setLocation("/guide")}>
+            <BookOpen className="w-3.5 h-3.5" /> Read Guide
+          </Button>
         </div>
 
         {/* Filters */}
